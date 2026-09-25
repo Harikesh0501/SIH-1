@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+*/node_modules/
+package-lock.json.bak
+
+# Next.js
+.next/
+*/.next/
+out/
+*/out/
+
+# Expo & React Native
+.expo/
+*/.expo/
+dist/
+*/dist/
+web-build/
+
+# Python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pytest / Testing
+.pytest_cache/
+*/.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & logs
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+scratch/
+
+# Environment files
+.env
+.env*.local
+backend/.env
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
