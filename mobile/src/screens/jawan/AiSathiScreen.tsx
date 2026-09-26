@@ -259,72 +259,58 @@ export const AiSathiScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* Institutional Header Block */}
-      <View style={styles.topHeader}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>{t('aiSathiTitle')}</Text>
-          <Text style={styles.headerSubtitle}>{t('aiSathiSubtitle')}</Text>
+    <View style={styles.safeArea}>
+      {/* WhatsApp-Style Tactical Header */}
+      <View style={styles.waHeader}>
+        <View style={styles.waHeaderLeft}>
+          <View style={styles.waAvatarBox}>
+            <Ionicons name="shield" size={18} color="#16A34A" />
+            <View style={styles.waOnlineDot} />
+          </View>
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.waHeaderTitle}>{lang === 'hi' ? 'AI साथी' : 'AI SATHI'}</Text>
+            <Text style={styles.waHeaderStatus}>
+              {lang === 'hi' ? 'सक्रिय • गोपनीय एनक्लेव' : 'Online • Confidential Enclave'}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.headerRight}>
-          <MonochromeBadge label="APAR QUARANTINED" variant="gold" />
-        </View>
-      </View>
-
-      {/* Segmented Dual Sub-Tab Switcher */}
-      <View style={styles.subTabRow}>
+        {/* Pranayama Pill in Header */}
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => setActiveTab('chat')}
-          style={[styles.subTabItem, activeTab === 'chat' && styles.subTabItemActive]}
+          onPress={() => setActiveTab(activeTab === 'pranayama' ? 'chat' : 'pranayama')}
+          style={[styles.waHeaderPill, activeTab === 'pranayama' && styles.waHeaderPillActive]}
         >
           <Ionicons
-            name="chatbubbles-outline"
-            size={16}
-            color={activeTab === 'chat' ? '#0F172A' : '#64748B'}
-            style={{ marginRight: 6 }}
+            name="flower"
+            size={14}
+            color={activeTab === 'pranayama' ? '#FFFFFF' : '#16A34A'}
+            style={{ marginRight: 4 }}
           />
-          <Text style={[styles.subTabText, activeTab === 'chat' && styles.subTabTextActive]}>
-            {t('chatTab')}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setActiveTab('pranayama')}
-          style={[styles.subTabItem, activeTab === 'pranayama' && styles.subTabItemActive]}
-        >
-          <Ionicons
-            name="flower-outline"
-            size={16}
-            color={activeTab === 'pranayama' ? '#0F172A' : '#64748B'}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={[styles.subTabText, activeTab === 'pranayama' && styles.subTabTextActive]}>
-            {t('pranayamaTab')}
+          <Text style={[styles.waHeaderPillText, activeTab === 'pranayama' && styles.waHeaderPillTextActive]}>
+            {lang === 'hi' ? 'प्राणायाम (4-7-8)' : 'Breathing (4-7-8)'}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* TAB 1: CONVERSATIONAL SATHI COMPANION */}
+      {/* VIEW 1: WHATSAPP-STYLE CHAT MESSENGER */}
       {activeTab === 'chat' ? (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.chatContainer}
         >
-          {/* Emergency Crisis Interceptor Banner */}
+          {/* Emergency Crisis Support Banner (if triggered) */}
           {crisisAlert && (
             <View style={styles.crisisBanner}>
               <View style={styles.crisisHeaderRow}>
                 <Ionicons name="warning" size={18} color="#DC2626" style={{ marginRight: 6 }} />
                 <Text style={styles.crisisTitle}>
-                  {lang === 'hi' ? 'आपातकालीन सहायता उपलब्ध है' : 'EMERGENCY CRISIS SUPPORT ACTIVE'}
+                  {lang === 'hi' ? 'आपातकालीन सहायता उपलब्ध है' : 'CRISIS SUPPORT ACTIVE'}
                 </Text>
               </View>
               <Text style={styles.crisisText}>
                 {lang === 'hi'
-                  ? 'आप अकेले नहीं हैं। सैन्य परामर्शदाता एवं टेली-मानस 24/7 निःशुल्क सहायता के लिए उपलब्ध हैं।'
+                  ? 'आप अकेले नहीं हैं। तुरंत नीचे टैप करके 14416 (टेली-मानस) पर निःशुल्क बात करें।'
                   : 'You do not have to carry this alone. Tele-MANAS is available 24/7 free of cost.'}
               </Text>
 
@@ -352,12 +338,21 @@ export const AiSathiScreen: React.FC = () => {
             </View>
           )}
 
-          {/* Chat Messages Scroll */}
+          {/* Chat Messages List (WhatsApp style) */}
           <ScrollView
             ref={chatScrollRef}
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
           >
+            {/* Date Separator Pill */}
+            <View style={styles.dateSeparatorRow}>
+              <View style={styles.dateSeparatorPill}>
+                <Text style={styles.dateSeparatorText}>
+                  {lang === 'hi' ? 'आज • 100% गोपनीय' : 'TODAY • 100% CONFIDENTIAL'}
+                </Text>
+              </View>
+            </View>
+
             {messages.map((item) => {
               const isJawan = item.sender === 'jawan';
               return (
@@ -365,11 +360,6 @@ export const AiSathiScreen: React.FC = () => {
                   key={item.id}
                   style={[styles.messageBubbleWrapper, isJawan ? styles.msgJawanWrap : styles.msgSathiWrap]}
                 >
-                  {!isJawan && (
-                    <View style={styles.sathiAvatar}>
-                      <Ionicons name="shield" size={14} color="#0F172A" />
-                    </View>
-                  )}
                   <View
                     style={[
                       styles.messageBubble,
@@ -377,12 +367,32 @@ export const AiSathiScreen: React.FC = () => {
                       item.isCrisis && styles.msgCrisisBubble,
                     ]}
                   >
+                    {!isJawan && (
+                      <View style={styles.sathiSenderRow}>
+                        <Ionicons name="shield-checkmark" size={12} color="#16A34A" style={{ marginRight: 4 }} />
+                        <Text style={styles.sathiSenderName}>
+                          {lang === 'hi' ? 'साथी' : 'AI SATHI'}
+                        </Text>
+                      </View>
+                    )}
+
                     <Text style={[styles.messageText, isJawan ? styles.msgJawanText : styles.msgSathiText]}>
                       {item.text}
                     </Text>
-                    <Text style={[styles.messageTime, isJawan ? styles.msgJawanTime : styles.msgSathiTime]}>
-                      {item.time}
-                    </Text>
+
+                    <View style={styles.metaRow}>
+                      <Text style={[styles.messageTime, isJawan ? styles.msgJawanTime : styles.msgSathiTime]}>
+                        {item.time}
+                      </Text>
+                      {isJawan && (
+                        <Ionicons
+                          name="checkmark-done"
+                          size={14}
+                          color="#16A34A"
+                          style={{ marginLeft: 3 }}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
               );
@@ -390,17 +400,19 @@ export const AiSathiScreen: React.FC = () => {
 
             {loadingReply && (
               <View style={[styles.messageBubbleWrapper, styles.msgSathiWrap]}>
-                <View style={styles.sathiAvatar}>
-                  <Ionicons name="shield" size={14} color="#0F172A" />
-                </View>
-                <View style={[styles.messageBubble, styles.msgSathiBubble, { paddingVertical: 10 }]}>
-                  <ActivityIndicator size="small" color="#0F172A" />
+                <View style={[styles.messageBubble, styles.msgSathiBubble, { paddingVertical: 10, paddingHorizontal: 14 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color="#16A34A" style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>
+                      {lang === 'hi' ? 'साथी उत्तर लिख रहा है...' : 'AI Sathi is replying...'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             )}
           </ScrollView>
 
-          {/* Quick Prompt Chips */}
+          {/* Quick Suggestion Chips (WhatsApp style horizontal drawer) */}
           <View style={styles.chipsContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
               {promptChips.map((chip, idx) => (
@@ -416,34 +428,37 @@ export const AiSathiScreen: React.FC = () => {
             </ScrollView>
           </View>
 
-          {/* Message Input Box */}
+          {/* WhatsApp-Style Input Bar */}
           <View style={styles.inputArea}>
-            <TextInput
-              style={styles.chatInput}
-              placeholder={t('typeMessage')}
-              placeholderTextColor="#94A3B8"
-              value={inputText}
-              onChangeText={setInputText}
-              onSubmitEditing={() => handleSendMessage()}
-            />
+            <View style={styles.inputCapsule}>
+              <TextInput
+                style={styles.chatInput}
+                placeholder={lang === 'hi' ? 'संदेश लिखें...' : 'Type a message...'}
+                placeholderTextColor="#94A3B8"
+                value={inputText}
+                onChangeText={setInputText}
+                onSubmitEditing={() => handleSendMessage()}
+              />
+            </View>
+
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => handleSendMessage()}
               disabled={loadingReply || !inputText.trim()}
               style={[styles.sendButton, (!inputText.trim() || loadingReply) && styles.sendButtonDisabled]}
             >
-              <Ionicons name="send" size={16} color="#FFFFFF" />
+              <Ionicons name="send" size={17} color="#FFFFFF" style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       ) : (
-        /* TAB 2: ANIMATED TACTICAL 4-7-8 PRANAYAMA GUIDE */
+        /* VIEW 2: ANIMATED TACTICAL 4-7-8 PRANAYAMA GUIDE */
         <ScrollView contentContainerStyle={styles.pranayamaContainer} showsVerticalScrollIndicator={false}>
           {/* Tactical Breathing Instructions Card */}
           <MonochromeCard highlight>
             <View style={styles.cardHeaderRow}>
               <View style={styles.cardIconBox}>
-                <Ionicons name="fitness" size={18} color="#0F172A" />
+                <Ionicons name="flower" size={20} color="#16A34A" />
               </View>
               <View style={{ marginLeft: 10, flex: 1 }}>
                 <Text style={styles.pranayamaCardTitle}>
@@ -556,7 +571,7 @@ export const AiSathiScreen: React.FC = () => {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -565,65 +580,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  topHeader: {
+  waHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: 0.4,
-  },
-  headerSubtitle: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#64748B',
-    marginTop: 2,
-  },
-  headerRight: {
-    marginLeft: 8,
-  },
-  subTabRow: {
-    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  subTabItem: {
-    flex: 1,
+  waHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  waAvatarBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
-  subTabItemActive: {
-    borderBottomColor: '#0F172A',
-    backgroundColor: '#F8FAFC',
+  waOnlineDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#16A34A',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
-  subTabText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.4,
-  },
-  subTabTextActive: {
+  waHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '900',
     color: '#0F172A',
+    letterSpacing: 0.3,
+  },
+  waHeaderStatus: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#16A34A',
+    marginTop: 1,
+  },
+  waHeaderPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  waHeaderPillActive: {
+    backgroundColor: '#16A34A',
+    borderColor: '#16A34A',
+  },
+  waHeaderPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#166534',
+    letterSpacing: 0.3,
+  },
+  waHeaderPillTextActive: {
+    color: '#FFFFFF',
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F1F5F9',
   },
   crisisBanner: {
     backgroundColor: '#FEE2E2',
@@ -632,7 +662,7 @@ const styles = StyleSheet.create({
     margin: 12,
     marginBottom: 4,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   crisisHeaderRow: {
     flexDirection: 'row',
@@ -660,8 +690,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#DC2626',
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   crisisCallText: {
     color: '#FFFFFF',
@@ -676,21 +706,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FDE68A',
     paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   crisisDoctorText: {
     color: '#92400E',
     fontSize: 10,
     fontWeight: '800',
   },
+  dateSeparatorRow: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  dateSeparatorPill: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  dateSeparatorText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#475569',
+    letterSpacing: 0.5,
+  },
   messagesList: {
-    padding: 16,
-    paddingBottom: 20,
+    padding: 12,
+    paddingBottom: 16,
   },
   messageBubbleWrapper: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 10,
     alignItems: 'flex-end',
   },
   msgJawanWrap: {
@@ -699,66 +745,76 @@ const styles = StyleSheet.create({
   msgSathiWrap: {
     justifyContent: 'flex-start',
   },
-  sathiAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 6,
-    marginBottom: 2,
-  },
   messageBubble: {
     maxWidth: '82%',
-    padding: 12,
-    borderRadius: 10,
-  },
-  msgJawanBubble: {
-    backgroundColor: '#0F172A',
-    borderBottomRightRadius: 2,
-  },
-  msgSathiBubble: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderBottomLeftRadius: 2,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: 14,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
+  msgJawanBubble: {
+    backgroundColor: '#DCF8C6',
+    borderBottomRightRadius: 3,
+    borderWidth: 1,
+    borderColor: '#C7E8B4',
+  },
+  msgSathiBubble: {
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 3,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   msgCrisisBubble: {
     backgroundColor: '#FEF2F2',
     borderColor: '#FCA5A5',
   },
+  sathiSenderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  sathiSenderName: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#166534',
+    letterSpacing: 0.3,
+  },
   messageText: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   msgJawanText: {
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   msgSathiText: {
     color: '#0F172A',
   },
-  messageTime: {
-    fontSize: 9,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     marginTop: 4,
-    alignSelf: 'flex-end',
+  },
+  messageTime: {
+    fontSize: 9.5,
+    color: '#64748B',
+    fontWeight: '600',
   },
   msgJawanTime: {
-    color: '#94A3B8',
+    color: '#475569',
   },
   msgSathiTime: {
     color: '#94A3B8',
   },
   chipsContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
   chipsScroll: {
     paddingHorizontal: 12,
@@ -767,10 +823,15 @@ const styles = StyleSheet.create({
   chatChip: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 1,
   },
   chatChipText: {
     fontSize: 11,
@@ -780,34 +841,43 @@ const styles = StyleSheet.create({
   inputArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
     gap: 8,
   },
-  chatInput: {
+  inputCapsule: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderColor: '#CBD5E1',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  chatInput: {
     fontSize: 13,
     color: '#0F172A',
+    paddingVertical: 8,
   },
   sendButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
   sendButtonDisabled: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   pranayamaContainer: {
     padding: 16,

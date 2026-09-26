@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   hologramText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
     color: '#92400E',
     letterSpacing: 0.5,

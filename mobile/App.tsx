@@ -67,7 +67,7 @@ function MainApp() {
 
   // Authenticated Defense Session View
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar style="dark" />
       <TacticalHeader
         onPressSync={() => {
@@ -78,320 +78,340 @@ function MainApp() {
         isTrenchMode={isTrenchMode}
       />
 
-      {/* Audit Admin Navigation Bar */}
-      {user.role === 'Audit Admin' && (
-        <View style={styles.tabNavRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setAuditTab('validator')}
-            style={[styles.tabNavItem, auditTab === 'validator' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={13}
-              color={auditTab === 'validator' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, auditTab === 'validator' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'ऑडिट सत्यापन' : 'AUDIT VALIDATOR'}
-            </Text>
-          </TouchableOpacity>
+      {/* Main Screen Content Area */}
+      <View style={styles.mainContentContainer}>
+        {user.role === 'Audit Admin' && auditTab === 'validator' ? (
+          <AuditValidatorScreen />
+        ) : user.role === 'Commanding Officer' && commanderTab === 'snapshot' ? (
+          <CommanderDeskScreen />
+        ) : user.role === 'Welfare Officer' && welfareTab === 'triage' ? (
+          <WelfareDeskScreen />
+        ) : user.role === 'Jawan' && jawanTab === 'checkin' ? (
+          <CheckInScreen onComplete={() => setJawanTab('sathi')} />
+        ) : user.role === 'Jawan' && jawanTab === 'sathi' ? (
+          <AiSathiScreen />
+        ) : user.role === 'Jawan' && jawanTab === 'leave' ? (
+          <LeaveScreen />
+        ) : user.role === 'Jawan' && jawanTab === 'cert' ? (
+          <CertificateScreen />
+        ) : (
+          <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+            {/* Authenticated Officer/Soldier Profile Card */}
+            <MonochromeCard highlight>
+              <View style={styles.badgeRow}>
+                <MonochromeBadge label={user.role.toUpperCase()} variant="gold" />
+              </View>
 
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setAuditTab('profile')}
-            style={[styles.tabNavItem, auditTab === 'profile' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="person-outline"
-              size={13}
-              color={auditTab === 'profile' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, auditTab === 'profile' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'प्रशासक प्रोफाइल' : 'ADMIN PROFILE'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Commanding Officer Navigation Bar */}
-      {user.role === 'Commanding Officer' && (
-        <View style={styles.tabNavRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setCommanderTab('snapshot')}
-            style={[styles.tabNavItem, commanderTab === 'snapshot' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="speedometer-outline"
-              size={13}
-              color={commanderTab === 'snapshot' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, commanderTab === 'snapshot' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'सामरिक स्नैपशॉट' : 'COMMAND SNAPSHOT'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setCommanderTab('profile')}
-            style={[styles.tabNavItem, commanderTab === 'profile' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="person-outline"
-              size={13}
-              color={commanderTab === 'profile' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, commanderTab === 'profile' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'कमांडेंट प्रोफाइल' : 'COMMANDER PROFILE'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Welfare Officer Navigation Bar */}
-      {user.role === 'Welfare Officer' && (
-        <View style={styles.tabNavRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setWelfareTab('triage')}
-            style={[styles.tabNavItem, welfareTab === 'triage' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="medkit-outline"
-              size={13}
-              color={welfareTab === 'triage' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, welfareTab === 'triage' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'क्लीनिकल ट्राइएज' : 'CLINICAL TRIAGE'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setWelfareTab('profile')}
-            style={[styles.tabNavItem, welfareTab === 'profile' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="person-outline"
-              size={13}
-              color={welfareTab === 'profile' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={[styles.tabNavText, welfareTab === 'profile' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'अधिकारी प्रोफाइल' : 'OFFICER PROFILE'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Jawan Tactical Navigation Bar */}
-      {user.role === 'Jawan' && (
-        <View style={styles.tabNavRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setJawanTab('checkin')}
-            style={[styles.tabNavItem, jawanTab === 'checkin' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="stopwatch-outline"
-              size={13}
-              color={jawanTab === 'checkin' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 3 }}
-            />
-            <Text style={[styles.tabNavText, jawanTab === 'checkin' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'चेक-इन' : 'CHECK-IN'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setJawanTab('sathi')}
-            style={[styles.tabNavItem, jawanTab === 'sathi' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="chatbubbles-outline"
-              size={13}
-              color={jawanTab === 'sathi' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 3 }}
-            />
-            <Text style={[styles.tabNavText, jawanTab === 'sathi' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'साथी' : 'SATHI'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setJawanTab('leave')}
-            style={[styles.tabNavItem, jawanTab === 'leave' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="calendar-outline"
-              size={13}
-              color={jawanTab === 'leave' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 3 }}
-            />
-            <Text style={[styles.tabNavText, jawanTab === 'leave' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'छुट्टी' : 'LEAVE'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setJawanTab('cert')}
-            style={[styles.tabNavItem, jawanTab === 'cert' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={13}
-              color={jawanTab === 'cert' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 3 }}
-            />
-            <Text style={[styles.tabNavText, jawanTab === 'cert' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'पास' : 'APAR PASS'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setJawanTab('profile')}
-            style={[styles.tabNavItem, jawanTab === 'profile' && styles.tabNavItemActive]}
-          >
-            <Ionicons
-              name="person-outline"
-              size={13}
-              color={jawanTab === 'profile' ? '#0F172A' : '#64748B'}
-              style={{ marginRight: 3 }}
-            />
-            <Text style={[styles.tabNavText, jawanTab === 'profile' && styles.tabNavTextActive]}>
-              {lang === 'hi' ? 'प्रोफाइल' : 'PROFILE'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Audit Admin Active Module */}
-      {user.role === 'Audit Admin' && auditTab === 'validator' ? (
-        <AuditValidatorScreen />
-      ) : user.role === 'Commanding Officer' && commanderTab === 'snapshot' ? (
-        <CommanderDeskScreen />
-      ) : user.role === 'Welfare Officer' && welfareTab === 'triage' ? (
-        <WelfareDeskScreen />
-      ) : user.role === 'Jawan' && jawanTab === 'checkin' ? (
-        <CheckInScreen onComplete={() => setJawanTab('sathi')} />
-      ) : user.role === 'Jawan' && jawanTab === 'sathi' ? (
-        <AiSathiScreen />
-      ) : user.role === 'Jawan' && jawanTab === 'leave' ? (
-        <LeaveScreen />
-      ) : user.role === 'Jawan' && jawanTab === 'cert' ? (
-        <CertificateScreen />
-      ) : (
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-          {/* Authenticated Officer/Soldier Profile Card */}
-          <MonochromeCard highlight>
-            <View style={styles.badgeRow}>
-              <MonochromeBadge label={user.role.toUpperCase()} variant="gold" />
-            </View>
-
-            <Text style={styles.title}>{user.rank} {user.full_name}</Text>
-            <Text style={styles.subtitle}>
-              {user.company ? `${user.company.toUpperCase()} • ` : ''}SERVICE NO: {user.service_number || user.username}
-            </Text>
-            <Text style={styles.unitText}>104 BATTALION CRPF</Text>
-
-            <View style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{lang === 'hi' ? 'तैनाती बटालियन:' : 'ASSIGNED UNIT:'}</Text>
-              <Text style={styles.infoValue}>{user.company || '104 Bn HQ'}</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{lang === 'hi' ? 'बायोमेट्रिक स्थिति:' : 'BIOMETRIC STATUS:'}</Text>
-              <Text style={styles.infoValue}>
-                {biometricSupported ? (lang === 'hi' ? 'सक्रिय (फिंगरप्रिंट)' : 'Active (Fingerprint)') : (lang === 'hi' ? 'पिन लॉक' : 'PIN Enclave')}
+              <Text style={styles.title}>{user.rank} {user.full_name}</Text>
+              <Text style={styles.subtitle}>
+                {user.company ? `${user.company.toUpperCase()} • ` : ''}SERVICE NO: {user.service_number || user.username}
               </Text>
-            </View>
+              <Text style={styles.unitText}>104 BATTALION CRPF</Text>
 
-            {user.role === 'Jawan' && (
-              <View style={styles.jawanQuickActions}>
-                <MonochromeButton
-                  title={lang === 'hi' ? 'चेक-इन' : 'CHECK-IN'}
-                  variant="solid"
-                  onPress={() => setJawanTab('checkin')}
-                  icon={<Ionicons name="stopwatch" size={13} color="#FFFFFF" />}
-                  style={{ flex: 1 }}
-                />
-                <MonochromeButton
-                  title={lang === 'hi' ? 'साथी' : 'SATHI'}
-                  variant="secondary"
-                  onPress={() => setJawanTab('sathi')}
-                  icon={<Ionicons name="chatbubbles" size={13} color="#0F172A" />}
-                  style={{ flex: 1 }}
-                />
-                <MonochromeButton
-                  title={lang === 'hi' ? 'छुट्टी' : 'LEAVE'}
-                  variant="secondary"
-                  onPress={() => setJawanTab('leave')}
-                  icon={<Ionicons name="calendar" size={13} color="#0F172A" />}
-                  style={{ flex: 1 }}
-                />
-                <MonochromeButton
-                  title={lang === 'hi' ? 'पास' : 'APAR PASS'}
-                  variant="secondary"
-                  onPress={() => setJawanTab('cert')}
-                  icon={<Ionicons name="shield-checkmark" size={13} color="#0F172A" />}
-                  style={{ flex: 1 }}
+              <View style={styles.divider} />
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{lang === 'hi' ? 'तैनाती बटालियन:' : 'ASSIGNED UNIT:'}</Text>
+                <Text style={styles.infoValue}>{user.company || '104 Bn HQ'}</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{lang === 'hi' ? 'बायोमेट्रिक स्थिति:' : 'BIOMETRIC STATUS:'}</Text>
+                <Text style={styles.infoValue}>
+                  {biometricSupported ? (lang === 'hi' ? 'सक्रिय (फिंगरप्रिंट)' : 'Active (Fingerprint)') : (lang === 'hi' ? 'पिन लॉक' : 'PIN Enclave')}
+                </Text>
+              </View>
+
+              {user.role === 'Jawan' && (
+                <View style={styles.jawanQuickActions}>
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'चेक-इन' : 'CHECK-IN'}
+                    variant="solid"
+                    onPress={() => setJawanTab('checkin')}
+                    icon={<Ionicons name="stopwatch" size={13} color="#FFFFFF" />}
+                    style={{ flex: 1 }}
+                  />
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'साथी' : 'SATHI'}
+                    variant="secondary"
+                    onPress={() => setJawanTab('sathi')}
+                    icon={<Ionicons name="chatbubbles" size={13} color="#0F172A" />}
+                    style={{ flex: 1 }}
+                  />
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'छुट्टी' : 'LEAVE'}
+                    variant="secondary"
+                    onPress={() => setJawanTab('leave')}
+                    icon={<Ionicons name="calendar" size={13} color="#0F172A" />}
+                    style={{ flex: 1 }}
+                  />
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'पास' : 'APAR PASS'}
+                    variant="secondary"
+                    onPress={() => setJawanTab('cert')}
+                    icon={<Ionicons name="shield-checkmark" size={13} color="#0F172A" />}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              )}
+              {user.role === 'Commanding Officer' && (
+                <View style={{ marginTop: 14 }}>
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'सामरिक बल स्नैपशॉट खोलें' : 'OPEN COMMAND READINESS SNAPSHOT'}
+                    variant="solid"
+                    onPress={() => setCommanderTab('snapshot')}
+                    icon={<Ionicons name="speedometer" size={14} color="#FFFFFF" />}
+                  />
+                </View>
+              )}
+
+              {user.role === 'Welfare Officer' && (
+                <View style={{ marginTop: 14 }}>
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'क्लीनिकल ट्राइएज खोलें' : 'OPEN CLINICAL TRIAGE DESK'}
+                    variant="solid"
+                    onPress={() => setWelfareTab('triage')}
+                    icon={<Ionicons name="medkit" size={14} color="#FFFFFF" />}
+                  />
+                </View>
+              )}
+
+              {user.role === 'Audit Admin' && (
+                <View style={{ marginTop: 14 }}>
+                  <MonochromeButton
+                    title={lang === 'hi' ? 'ऑडिट एवं अखंडता सत्यापन खोलें' : 'OPEN AUDIT & INTEGRITY VALIDATOR'}
+                    variant="solid"
+                    onPress={() => setAuditTab('validator')}
+                    icon={<Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />}
+                  />
+                </View>
+              )}
+            </MonochromeCard>
+
+            {/* Lock / Exit Enclave Button */}
+            <MonochromeButton
+              title={lang === 'hi' ? 'एनक्लेव लॉक करें एवं बाहर निकलें' : 'LOCK ENCLAVE & LOGOUT'}
+              variant="outline"
+              onPress={logout}
+              style={styles.logoutActionBtn}
+            />
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Modern Fixed Bottom Navigation Bar */}
+      <View style={styles.bottomNavContainer}>
+        {user.role === 'Jawan' && (
+          <View style={styles.bottomNavRow}>
+            {/* 1. Check-In */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setJawanTab('checkin')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, jawanTab === 'checkin' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={jawanTab === 'checkin' ? 'stopwatch' : 'stopwatch-outline'}
+                  size={20}
+                  color={jawanTab === 'checkin' ? '#0F172A' : '#64748B'}
                 />
               </View>
-            )}
-            {user.role === 'Commanding Officer' && (
-              <View style={{ marginTop: 14 }}>
-                <MonochromeButton
-                  title={lang === 'hi' ? 'सामरिक बल स्नैपशॉट खोलें' : 'OPEN COMMAND READINESS SNAPSHOT'}
-                  variant="solid"
-                  onPress={() => setCommanderTab('snapshot')}
-                  icon={<Ionicons name="speedometer" size={14} color="#FFFFFF" />}
+              <Text style={[styles.bottomNavText, jawanTab === 'checkin' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'चेक-इन' : 'CHECK-IN'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* 2. Sathi */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setJawanTab('sathi')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, jawanTab === 'sathi' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={jawanTab === 'sathi' ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'}
+                  size={20}
+                  color={jawanTab === 'sathi' ? '#0F172A' : '#64748B'}
                 />
               </View>
-            )}
+              <Text style={[styles.bottomNavText, jawanTab === 'sathi' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'साथी' : 'AI SATHI'}
+              </Text>
+            </TouchableOpacity>
 
-            {user.role === 'Welfare Officer' && (
-              <View style={{ marginTop: 14 }}>
-                <MonochromeButton
-                  title={lang === 'hi' ? 'क्लीनिकल ट्राइएज खोलें' : 'OPEN CLINICAL TRIAGE DESK'}
-                  variant="solid"
-                  onPress={() => setWelfareTab('triage')}
-                  icon={<Ionicons name="medkit" size={14} color="#FFFFFF" />}
+            {/* 3. Leave */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setJawanTab('leave')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, jawanTab === 'leave' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={jawanTab === 'leave' ? 'calendar' : 'calendar-outline'}
+                  size={20}
+                  color={jawanTab === 'leave' ? '#0F172A' : '#64748B'}
                 />
               </View>
-            )}
+              <Text style={[styles.bottomNavText, jawanTab === 'leave' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'छुट्टी' : 'LEAVE'}
+              </Text>
+            </TouchableOpacity>
 
-            {user.role === 'Audit Admin' && (
-              <View style={{ marginTop: 14 }}>
-                <MonochromeButton
-                  title={lang === 'hi' ? 'ऑडिट एवं अखंडता सत्यापन खोलें' : 'OPEN AUDIT & INTEGRITY VALIDATOR'}
-                  variant="solid"
-                  onPress={() => setAuditTab('validator')}
-                  icon={<Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />}
+            {/* 4. Pass */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setJawanTab('cert')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, jawanTab === 'cert' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={jawanTab === 'cert' ? 'shield-checkmark' : 'shield-checkmark-outline'}
+                  size={20}
+                  color={jawanTab === 'cert' ? '#0F172A' : '#64748B'}
                 />
               </View>
-            )}
-          </MonochromeCard>
+              <Text style={[styles.bottomNavText, jawanTab === 'cert' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'पास' : 'APAR PASS'}
+              </Text>
+            </TouchableOpacity>
 
-          {/* Lock / Exit Enclave Button */}
-          <MonochromeButton
-            title={lang === 'hi' ? 'एनक्लेव लॉक करें एवं बाहर निकलें' : 'LOCK ENCLAVE & LOGOUT'}
-            variant="outline"
-            onPress={logout}
-            style={styles.logoutActionBtn}
-          />
-        </ScrollView>
-      )}
+            {/* 5. Profile */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setJawanTab('profile')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, jawanTab === 'profile' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={jawanTab === 'profile' ? 'person' : 'person-outline'}
+                  size={20}
+                  color={jawanTab === 'profile' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, jawanTab === 'profile' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'प्रोफाइल' : 'PROFILE'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Welfare Officer Bottom Nav */}
+        {user.role === 'Welfare Officer' && (
+          <View style={styles.bottomNavRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setWelfareTab('triage')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, welfareTab === 'triage' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={welfareTab === 'triage' ? 'medkit' : 'medkit-outline'}
+                  size={20}
+                  color={welfareTab === 'triage' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, welfareTab === 'triage' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'क्लीनिकल ट्राइएज' : 'CLINICAL TRIAGE'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setWelfareTab('profile')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, welfareTab === 'profile' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={welfareTab === 'profile' ? 'person' : 'person-outline'}
+                  size={20}
+                  color={welfareTab === 'profile' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, welfareTab === 'profile' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'अधिकारी प्रोफाइल' : 'OFFICER PROFILE'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Commanding Officer Bottom Nav */}
+        {user.role === 'Commanding Officer' && (
+          <View style={styles.bottomNavRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setCommanderTab('snapshot')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, commanderTab === 'snapshot' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={commanderTab === 'snapshot' ? 'speedometer' : 'speedometer-outline'}
+                  size={20}
+                  color={commanderTab === 'snapshot' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, commanderTab === 'snapshot' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'सामरिक स्नैपशॉट' : 'COMMAND READINESS'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setCommanderTab('profile')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, commanderTab === 'profile' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={commanderTab === 'profile' ? 'person' : 'person-outline'}
+                  size={20}
+                  color={commanderTab === 'profile' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, commanderTab === 'profile' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'कमांडेंट प्रोफाइल' : 'COMMANDER PROFILE'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Audit Admin Bottom Nav */}
+        {user.role === 'Audit Admin' && (
+          <View style={styles.bottomNavRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setAuditTab('validator')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, auditTab === 'validator' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={auditTab === 'validator' ? 'shield-checkmark' : 'shield-checkmark-outline'}
+                  size={20}
+                  color={auditTab === 'validator' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, auditTab === 'validator' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'ऑडिट सत्यापन' : 'AUDIT VALIDATOR'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setAuditTab('profile')}
+              style={styles.bottomNavItem}
+            >
+              <View style={[styles.bottomIconPill, auditTab === 'profile' && styles.bottomIconPillActive]}>
+                <Ionicons
+                  name={auditTab === 'profile' ? 'person' : 'person-outline'}
+                  size={20}
+                  color={auditTab === 'profile' ? '#0F172A' : '#64748B'}
+                />
+              </View>
+              <Text style={[styles.bottomNavText, auditTab === 'profile' && styles.bottomNavTextActive]}>
+                {lang === 'hi' ? 'प्रशासक प्रोफाइल' : 'ADMIN PROFILE'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
       {/* Field Trench & Air-Gap Sync Modal */}
       <TrenchSyncModal
@@ -434,33 +454,51 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: 12,
   },
-  tabNavRow: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  tabNavItem: {
+  mainContentContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 11,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabNavItemActive: {
-    borderBottomColor: '#0F172A',
     backgroundColor: '#F8FAFC',
   },
-  tabNavText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.4,
+  bottomNavContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  tabNavTextActive: {
+  bottomNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 6,
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  bottomIconPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 14,
+    marginBottom: 2,
+    backgroundColor: 'transparent',
+  },
+  bottomIconPillActive: {
+    backgroundColor: '#F1F5F9',
+  },
+  bottomNavText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+    letterSpacing: 0.3,
+  },
+  bottomNavTextActive: {
     color: '#0F172A',
+    fontWeight: '800',
   },
   container: {
     padding: 16,
