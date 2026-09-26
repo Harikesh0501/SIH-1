@@ -16,13 +16,14 @@ const getBackendBaseUrl = () => {
   }
 
   if (Platform.OS === 'android') {
-    return 'http://10.99.237.173:8000';
+    return 'http://10.99.237.128:8000';
   }
 
   return 'http://localhost:8000';
 };
 
 export const API_BASE_URL = getBackendBaseUrl();
+console.log('[Rakshak-Aayush Mobile] Resolved API_BASE_URL:', API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
