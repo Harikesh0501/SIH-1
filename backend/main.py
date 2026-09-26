@@ -127,7 +127,11 @@ def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
     Verifies service ID credentials against bcrypt hashed password,
     creates signed JWT token with role claims, and writes an audit event.
     """
-    user = db.query(models.User).filter(models.User.username == req.username).first()
+    clean_username = (req.username or "").strip()
+    user = db.query(models.User).filter(
+        (models.User.username.ilike(clean_username)) |
+        (models.User.service_number.ilike(clean_username))
+    ).first()
     if not user or not verify_password(req.password, user.hashed_password):
         db.add(models.AuditLog(
             user_role="Unknown",

@@ -123,10 +123,12 @@ export const CheckInScreen: React.FC<{ onComplete?: () => void }> = ({ onComplet
       const data = res.data;
 
       setResult({
-        stress_score: Math.round(data.stress_score || 30),
+        stress_score: Math.round(data.stress_score ?? 30),
         risk_level: data.risk_level || 'Resilient',
-        is_crisis: !!data.is_crisis,
-        message: lang === 'hi' ? (data.message_hi || data.recommendation) : (data.message_en || data.recommendation),
+        is_crisis: !!(data.crisis_detected ?? data.is_crisis),
+        message: lang === 'hi'
+          ? (data.resilience_message_hi || data.message_hi || data.recommendation || 'चेक-इन सफलतापूर्वक दर्ज हुआ।')
+          : (data.resilience_message_en || data.message_en || data.recommendation || 'Check-in successfully recorded.'),
         is_offline: false,
       });
     } catch (apiError: any) {

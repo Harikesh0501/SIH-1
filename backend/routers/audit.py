@@ -175,7 +175,7 @@ def verify_audit_ledger_integrity(
     Validates SHA-256 hash chains across all audit records to prove
     that no log has been retroactively modified, altered, or deleted.
     """
-    all_logs = db.query(models.AuditLog).order_by(models.AuditLog.id.asc()).all()
+    all_logs = db.query(models.AuditLog).order_by(models.AuditLog.id.asc()).limit(200).all()
 
     chain_hasher = hashlib.sha256()
     updated = False

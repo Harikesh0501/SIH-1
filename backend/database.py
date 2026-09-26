@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
@@ -8,18 +8,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+use_sqlite = os.environ.get("USE_SQLITE", "").lower() in ("1", "true", "yes")
 
-if DATABASE_URL:
+engine = None
+
+if DATABASE_URL and not use_sqlite:
     # Normalize postgres:// to postgresql:// for SQLAlchemy compatibility
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    
-    SQLALCHEMY_DATABASE_URL = DATABASE_URL
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        poolclass=NullPool,
-    )
-else:
+
+    try:
+        test_engine = create_engine(
+            DATABASE_URL,
+            poolclass=NullPool,
+            connect_args={"connect_timeout": 3}
+        )
+        with test_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        engine = test_engine
+        print("[Database] Successfully connected to PostgreSQL cloud database.")
+    except Exception as e:
+        print(f"[Database Warning] PostgreSQL connection failed ({type(e).__name__}). Falling back to local SQLite database.")
+        engine = None
+
+if engine is None:
     # Fallback to local SQLite database
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DB_PATH = os.path.join(BASE_DIR, "rakshak_aayush.db")
@@ -39,6 +51,7 @@ else:
         cursor.execute("PRAGMA synchronous=NORMAL;")
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()
+    print("[Database] Using local SQLite database (rakshak_aayush.db).")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

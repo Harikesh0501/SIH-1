@@ -92,10 +92,17 @@ def require_role(allowed_roles: List[str]):
     Blocks any request where the authenticated user's role is not in allowed_roles.
     """
     def role_checker(current_user: models.User = Depends(get_current_user)) -> models.User:
-        if current_user.role not in allowed_roles:
+        def norm(r: str) -> str:
+            return (r or "").lower().replace("_", "").replace(" ", "").replace("-", "")
+
+        user_norm = norm(current_user.role)
+        allowed_norms = {norm(r) for r in allowed_roles}
+
+        if user_norm not in allowed_norms:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Security Clearance Denied: Role '{current_user.role}' lacks authorization. Required: {allowed_roles}"
             )
         return current_user
     return role_checker
+
