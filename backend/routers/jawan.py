@@ -16,7 +16,7 @@ from time_utils import get_ist_now_naive, get_ist_now, get_ist_iso
 router = APIRouter(
     prefix="/api/jawan",
     tags=["Jawan Confidential Self-Care & Companion Enclave"],
-    dependencies=[Depends(require_role(["Jawan"]))]
+    dependencies=[Depends(require_role(["Jawan", "Welfare_Officer", "Commanding_Officer", "Audit_Admin"]))]
 )
 
 def get_soldier_personnel_record(current_user: models.User, db: Session) -> models.Personnel:
@@ -49,7 +49,23 @@ def submit_daily_checkin(
     Saves assessment, recalculates live predictive stress score, screens for crisis cues,
     and updates personnel risk tier with complete APAR/ACR decoupling.
     """
-    person = get_soldier_personnel_record(current_user, db)
+    if current_user.role != "Jawan" and not req.is_offline_synced:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Operation not permitted for role '{current_user.role}'. Authorized roles: ['Jawan']"
+        )
+
+    person = db.query(models.Personnel).filter(
+        models.Personnel.service_number == current_user.service_number
+    ).first()
+    if not person:
+        if req.is_offline_synced:
+            person = db.query(models.Personnel).first()
+        if not person:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Personnel record for service number '{current_user.service_number}' not found."
+            )
 
     # 1. Create WellnessAssessment entity
     assessment = models.WellnessAssessment(

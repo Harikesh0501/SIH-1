@@ -237,3 +237,9 @@ export async function setFieldTrenchMode(active: boolean): Promise<void> {
 export async function getFieldTrenchMode(): Promise<boolean> {
   return trenchModeActive;
 }
+
+export async function clearOfflineQueue(): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(`DELETE FROM offline_checkins;`);
+  await db.runAsync(`DELETE FROM offline_leaves;`);
+}

@@ -43,3 +43,10 @@ export async function markCheckInSynced(id: number): Promise<void> {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   }
 }
+
+export async function clearOfflineQueue(): Promise<void> {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem('rakshak_offline_leaves');
+  }
+}

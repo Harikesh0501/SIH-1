@@ -156,13 +156,14 @@ export const TacticalHeader: React.FC<{
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
-        <View style={styles.hologramTag}>
-          <Ionicons name="shield-checkmark" size={10} color="#D97706" style={{ marginRight: 4 }} />
-          <Text style={styles.hologramText}>104 BN CRPF • SOVEREIGN</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>RAKSHAK-AAYUSH</Text>
+          <View style={styles.hologramTag}>
+            <Text style={styles.hologramText}>104 BN</Text>
+          </View>
         </View>
-        <Text style={styles.headerTitle}>RAKSHAK-AAYUSH</Text>
         <Text style={styles.headerSubtitle} numberOfLines={1}>
-          {user ? `${user.rank} ${user.full_name}` : 'AIR-GAPPED FIELD ENCLAVE'}
+          {user ? `${user.rank} ${user.full_name}` : 'DEFENSE MEDICAL SUITE'}
         </Text>
       </View>
 
@@ -179,10 +180,10 @@ export const TacticalHeader: React.FC<{
             onPress={onPressSync}
           >
             <Ionicons
-              name={isTrenchMode ? 'radio' : pendingCount > 0 ? 'cloud-upload' : 'radio-outline'}
-              size={11}
+              name={isTrenchMode ? 'radio' : pendingCount > 0 ? 'cloud-upload' : 'cloud-done-outline'}
+              size={12}
               color={isTrenchMode || pendingCount > 0 ? '#D97706' : '#16A34A'}
-              style={{ marginRight: 3 }}
+              style={{ marginRight: 4 }}
             />
             <Text
               style={[
@@ -190,9 +191,7 @@ export const TacticalHeader: React.FC<{
                 (isTrenchMode || pendingCount > 0) && styles.syncStatusTextWarning,
               ]}
             >
-              {isTrenchMode
-                ? (pendingCount > 0 ? `BUNKER (${pendingCount})` : 'BUNKER')
-                : (pendingCount > 0 ? `SYNC (${pendingCount})` : 'SYNC')}
+              {pendingCount > 0 ? `SYNC (${pendingCount})` : 'SYNC'}
             </Text>
           </TouchableOpacity>
         )}
@@ -207,7 +206,7 @@ export const TacticalHeader: React.FC<{
 
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Ionicons name="log-out-outline" size={14} color="#64748B" style={{ marginRight: 4 }} />
+          <Ionicons name="log-out-outline" size={13} color="#64748B" style={{ marginRight: 3 }} />
           <Text style={styles.logoutText}>EXIT</Text>
         </TouchableOpacity>
       </View>
@@ -364,58 +363,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: THEME.spacing.lg,
-    paddingVertical: THEME.spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
   },
   headerLeft: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 10,
   },
   hologramTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
     backgroundColor: '#FEF3C7',
     borderWidth: 1,
     borderColor: '#FDE68A',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 3,
-    marginBottom: 3,
+    borderRadius: 4,
+    marginLeft: 8,
   },
   hologramText: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
     color: '#92400E',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   headerTitle: {
     color: '#0F172A',
     fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     color: '#64748B',
     fontSize: 11,
     fontWeight: '600',
-    marginTop: 1,
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   langButton: {
     borderWidth: 1,
     borderColor: '#CBD5E1',
     backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 4,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   langButtonText: {
     color: '#0F172A',
@@ -429,8 +425,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 4,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   logoutText: {
     color: '#64748B',
@@ -443,9 +439,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#BBF7D0',
     backgroundColor: '#F0FDF4',
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   syncStatusPillTrench: {
     borderColor: '#FDE68A',
@@ -456,7 +452,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
   },
   syncStatusText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
     color: '#166534',
     letterSpacing: 0.3,

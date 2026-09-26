@@ -321,3 +321,16 @@ export async function getFieldTrenchMode(): Promise<boolean> {
   }
   return false;
 }
+
+export async function clearOfflineQueue(): Promise<void> {
+  const db = await getNativeDb();
+  if (db) {
+    await db.runAsync(`DELETE FROM offline_checkins;`);
+    await db.runAsync(`DELETE FROM offline_leaves;`);
+    return;
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.removeItem(CHECKIN_STORAGE_KEY);
+    window.localStorage.removeItem(LEAVE_STORAGE_KEY);
+  }
+}

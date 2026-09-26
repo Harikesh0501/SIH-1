@@ -18,7 +18,7 @@ import { TrenchSyncModal } from './src/components/TrenchSyncModal';
 import { getPendingCount, getFieldTrenchMode } from './src/storage/offlineStorage';
 
 function MainApp() {
-  const { user, lang, t, biometricSupported, switchDemoRole, logout, isLoading } = useAuth();
+  const { user, lang, t, biometricSupported, logout, isLoading } = useAuth();
   const [jawanTab, setJawanTab] = useState<'checkin' | 'sathi' | 'leave' | 'cert' | 'profile'>('checkin');
   const [welfareTab, setWelfareTab] = useState<'triage' | 'profile'>('triage');
   const [commanderTab, setCommanderTab] = useState<'snapshot' | 'profile'>('snapshot');
@@ -291,10 +291,9 @@ function MainApp() {
         <CertificateScreen />
       ) : (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-          {/* Authenticated Credential Dossier Card */}
+          {/* Authenticated Officer/Soldier Profile Card */}
           <MonochromeCard highlight>
             <View style={styles.badgeRow}>
-              <MonochromeBadge label="AUTHENTICATED ENCLAVE" variant="primary" />
               <MonochromeBadge label={user.role.toUpperCase()} variant="gold" />
             </View>
 
@@ -302,30 +301,20 @@ function MainApp() {
             <Text style={styles.subtitle}>
               {user.company ? `${user.company.toUpperCase()} • ` : ''}SERVICE NO: {user.service_number || user.username}
             </Text>
-            <Text style={styles.unitText}>104 BATTALION CRPF • AIR-GAPPED MOBILE SUITE</Text>
+            <Text style={styles.unitText}>104 BATTALION CRPF</Text>
 
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>SECURITY SHIELD:</Text>
-              <Text style={styles.infoValue}>Sec 21 Mental Healthcare Act Decoupled</Text>
+              <Text style={styles.infoLabel}>{lang === 'hi' ? 'तैनाती बटालियन:' : 'ASSIGNED UNIT:'}</Text>
+              <Text style={styles.infoValue}>{user.company || '104 Bn HQ'}</Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>BIOMETRIC SENSOR:</Text>
+              <Text style={styles.infoLabel}>{lang === 'hi' ? 'बायोमेट्रिक स्थिति:' : 'BIOMETRIC STATUS:'}</Text>
               <Text style={styles.infoValue}>
-                {biometricSupported ? 'Hardware Touch ID / Fingerprint Linked' : 'Encrypted PIN Enclave'}
+                {biometricSupported ? (lang === 'hi' ? 'सक्रिय (फिंगरप्रिंट)' : 'Active (Fingerprint)') : (lang === 'hi' ? 'पिन लॉक' : 'PIN Enclave')}
               </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>SYSTEM THEME:</Text>
-              <Text style={styles.infoValue}>Institutional Light Mode (Zero Blue)</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>OFFLINE STORAGE:</Text>
-              <Text style={styles.infoValue}>Encrypted Local SQLite (Border Trench Ready)</Text>
             </View>
 
             {user.role === 'Jawan' && (
@@ -361,85 +350,37 @@ function MainApp() {
               </View>
             )}
             {user.role === 'Commanding Officer' && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <MonochromeButton
                   title={lang === 'hi' ? 'सामरिक बल स्नैपशॉट खोलें' : 'OPEN COMMAND READINESS SNAPSHOT'}
                   variant="solid"
                   onPress={() => setCommanderTab('snapshot')}
-                  icon={<Ionicons name="speedometer" size={13} color="#FFFFFF" />}
+                  icon={<Ionicons name="speedometer" size={14} color="#FFFFFF" />}
                 />
               </View>
             )}
 
             {user.role === 'Welfare Officer' && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <MonochromeButton
                   title={lang === 'hi' ? 'क्लीनिकल ट्राइएज खोलें' : 'OPEN CLINICAL TRIAGE DESK'}
                   variant="solid"
                   onPress={() => setWelfareTab('triage')}
-                  icon={<Ionicons name="medkit" size={13} color="#FFFFFF" />}
+                  icon={<Ionicons name="medkit" size={14} color="#FFFFFF" />}
                 />
               </View>
             )}
 
             {user.role === 'Audit Admin' && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <MonochromeButton
                   title={lang === 'hi' ? 'ऑडिट एवं अखंडता सत्यापन खोलें' : 'OPEN AUDIT & INTEGRITY VALIDATOR'}
                   variant="solid"
                   onPress={() => setAuditTab('validator')}
-                  icon={<Ionicons name="shield-checkmark" size={13} color="#FFFFFF" />}
+                  icon={<Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />}
                 />
               </View>
             )}
-          </MonochromeCard>
-
-          {/* Role Switching Deck */}
-          <MonochromeCard>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="git-branch-outline" size={16} color="#0F172A" style={{ marginRight: 6 }} />
-              <Text style={styles.sectionHeader}>{t('demoRolesTitle')}</Text>
-            </View>
-            <Text style={styles.sectionSub}>Switch authenticated persona with 1-tap:</Text>
-
-            <View style={styles.roleGrid}>
-              <MonochromeButton
-                title="JAWAN (SOLDIER)"
-                variant={user.role === 'Jawan' ? 'solid' : 'secondary'}
-                onPress={() => {
-                  setJawanTab('checkin');
-                  switchDemoRole('Jawan');
-                }}
-                style={styles.roleBtn}
-              />
-              <MonochromeButton
-                title="WELFARE OFFICER"
-                variant={user.role === 'Welfare Officer' ? 'solid' : 'secondary'}
-                onPress={() => {
-                  setWelfareTab('triage');
-                  switchDemoRole('Welfare Officer');
-                }}
-                style={styles.roleBtn}
-              />
-              <MonochromeButton
-                title="COMMANDING OFFICER"
-                variant={user.role === 'Commanding Officer' ? 'solid' : 'secondary'}
-                onPress={() => {
-                  setCommanderTab('snapshot');
-                  switchDemoRole('Commanding Officer');
-                }}
-                style={styles.roleBtn}
-              />
-              <MonochromeButton
-                title="AUDIT ADMIN"
-                variant={user.role === 'Audit Admin' ? 'solid' : 'secondary'}
-                onPress={() => {
-                  setAuditTab('validator');
-                  switchDemoRole('Audit Admin');
-                }}
-                style={styles.roleBtn}
-              />
-            </View>
           </MonochromeCard>
 
           {/* Lock / Exit Enclave Button */}
@@ -577,30 +518,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 14,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: 0.5,
-  },
-  sectionSub: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  roleGrid: {
-    gap: 8,
-  },
-  roleBtn: {
-    paddingVertical: 10,
-  },
   logoutActionBtn: {
-    marginTop: 8,
+    marginTop: 14,
   },
 });

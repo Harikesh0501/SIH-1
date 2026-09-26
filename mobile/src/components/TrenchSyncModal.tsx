@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { THEME } from '../constants/theme';
-import { MonochromeButton, MonochromeBadge } from './common';
+import { MonochromeButton } from './common';
 import { apiClient } from '../api/client';
 import {
   getPendingCount,
   getPendingCheckIns,
   getPendingLeaves,
   syncAllPending,
+  clearOfflineQueue,
   getFieldTrenchMode,
   setFieldTrenchMode,
   OfflineCheckIn,
@@ -47,20 +47,25 @@ export const TrenchSyncModal: React.FC<TrenchSyncModalProps> = ({
   const [pendingCheckins, setPendingCheckins] = useState<OfflineCheckIn[]>([]);
   const [pendingLeaves, setPendingLeaves] = useState<OfflineLeave[]>([]);
   const [syncing, setSyncing] = useState<boolean>(false);
+  const [clearing, setClearing] = useState<boolean>(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
   const refreshQueue = async () => {
-    const tMode = await getFieldTrenchMode();
-    setIsTrenchMode(tMode);
+    try {
+      const tMode = await getFieldTrenchMode();
+      setIsTrenchMode(tMode);
 
-    const c = await getPendingCount();
-    setCounts(c);
+      const c = await getPendingCount();
+      setCounts(c);
 
-    const cList = await getPendingCheckIns();
-    setPendingCheckins(cList);
+      const cList = await getPendingCheckIns();
+      setPendingCheckins(cList);
 
-    const lList = await getPendingLeaves();
-    setPendingLeaves(lList);
+      const lList = await getPendingLeaves();
+      setPendingLeaves(lList);
+    } catch (e) {
+      console.log('Error refreshing queue:', e);
+    }
   };
 
   useEffect(() => {
@@ -92,50 +97,72 @@ export const TrenchSyncModal: React.FC<TrenchSyncModalProps> = ({
     }
   };
 
+  const handleClearQueue = async () => {
+    setClearing(true);
+    try {
+      await clearOfflineQueue();
+      setSyncResult(null);
+      await refreshQueue();
+      if (onSyncComplete) {
+        onSyncComplete();
+      }
+    } catch (e) {
+      console.log('Error clearing queue:', e);
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const formatTimestamp = (raw: string) => {
+    if (!raw) return '';
+    try {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return raw.slice(0, 16);
+      return `${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+    } catch {
+      return raw.slice(0, 16);
+    }
+  };
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <Ionicons name="radio" size={16} color="#D97706" />
+                <Ionicons name="cloud-offline-outline" size={18} color="#D97706" />
               </View>
               <View>
                 <Text style={styles.modalTitle}>
-                  {lang === 'hi' ? 'सीमावर्ती बंकर / ऑफलाइन सिंक' : 'FIELD TRENCH & AIR-GAP SYNC'}
+                  {lang === 'hi' ? 'ऑफलाइन बंकर एवं सिंक' : 'AIR-GAP & OFFLINE SYNC'}
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  {lang === 'hi' ? 'स्थानीय SQLite एन्क्रिप्टेड कतार' : 'Encrypted Local SQLite Queue Engine'}
+                  {lang === 'hi' ? 'स्थानीय डिवाइस डेटाबेस' : 'Local Encrypted SQLite Storage'}
                 </Text>
               </View>
             </View>
 
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
               <Ionicons name="close" size={20} color="#0F172A" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.bodyScroll} showsVerticalScrollIndicator={false}>
-            {/* Section 1: Simulated Trench Mode Toggle */}
+            {/* Section 1: Trench Mode Toggle */}
             <View style={styles.toggleCard}>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                   <View style={[styles.statusDot, isTrenchMode ? styles.dotAmber : styles.dotGreen]} />
                   <Text style={styles.toggleTitle}>
-                    {lang === 'hi' ? 'सीमावर्ती बंकर मोड (एयर-गैप)' : 'Border Trench Mode (Air-Gap)'}
+                    {lang === 'hi' ? 'सीमावर्ती बंकर मोड (ऑफलाइन)' : 'Border Trench Mode (Offline)'}
                   </Text>
                 </View>
                 <Text style={styles.toggleDesc}>
                   {lang === 'hi'
-                    ? 'जीरो नेटवर्क (नो इंटरनेट) में भी चेक-इन और आवेदन स्थानीय डेटाबेस में सुरक्षित होते हैं।'
-                    : 'Simulates zero connectivity. All records are queued locally in SQLite with instant on-device stress estimation.'}
+                    ? 'इंटरनेट न होने पर चेक-इन और आवेदन फोन में सुरक्षित रहते हैं।'
+                    : 'Queues assessments locally when disconnected from base network.'}
                 </Text>
               </View>
               <Switch
@@ -146,61 +173,71 @@ export const TrenchSyncModal: React.FC<TrenchSyncModalProps> = ({
               />
             </View>
 
-            {/* Section 2: Sync Result Banner */}
+            {/* Section 2: Sync Status Notification Banner */}
             {syncResult && (
-              <View style={[styles.resultBanner, syncResult.failed === 0 ? styles.resultSuccess : styles.resultWarning]}>
+              <View
+                style={[
+                  styles.resultBanner,
+                  syncResult.failed === 0 ? styles.resultSuccess : styles.resultWarning,
+                ]}
+              >
                 <Ionicons
                   name={syncResult.failed === 0 ? 'checkmark-circle' : 'alert-circle'}
-                  size={16}
+                  size={18}
                   color={syncResult.failed === 0 ? '#16A34A' : '#D97706'}
-                  style={{ marginRight: 6 }}
+                  style={{ marginRight: 8 }}
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.resultTitle}>
                     {syncResult.failed === 0
-                      ? (lang === 'hi' ? 'सिंक सफल: सभी रिकॉर्ड सर्वर पर भेजे गए' : 'Sync Complete: All records pushed')
-                      : (lang === 'hi' ? `आंशिक सिंक: ${syncResult.synced} सफल, ${syncResult.failed} शेष` : `Partial Sync: ${syncResult.synced} synced, ${syncResult.failed} failed`)}
+                      ? (lang === 'hi' ? 'सिंक सफल: सभी रिकॉर्ड सुरक्षित भेजे गए' : 'Sync Complete: All records pushed')
+                      : (lang === 'hi'
+                          ? `सिंक स्थिति: ${syncResult.synced} सफल, ${syncResult.failed} असफल`
+                          : `Sync Status: ${syncResult.synced} synced, ${syncResult.failed} pending`)}
                   </Text>
-                  <Text style={styles.resultSub}>
-                    {lang === 'hi'
-                      ? 'DPDPA 2023 धारा 14: सिंक समय और डेटा अखंडता सत्यापित।'
-                      : 'DPDPA 2023 Sec 14: Cryptographic integrity verified.'}
-                  </Text>
+                  {syncResult.details && syncResult.details.length > 0 && (
+                    <Text style={styles.resultSub} numberOfLines={2}>
+                      {syncResult.details[0]}
+                    </Text>
+                  )}
                 </View>
               </View>
             )}
 
-            {/* Section 3: Pending Queue Status */}
+            {/* Section 3: Pending Queue Header */}
             <View style={styles.queueHeaderRow}>
               <Text style={styles.sectionLabel}>
-                {lang === 'hi' ? 'स्थानीय कतार में लंबित रिकॉर्ड' : 'PENDING AIR-GAP QUEUE'}
+                {lang === 'hi' ? 'लंबित रिकॉर्ड' : 'QUEUED RECORDS'}
               </Text>
               <View style={[styles.counterPill, counts.total > 0 && styles.counterPillActive]}>
                 <Text style={[styles.counterText, counts.total > 0 && styles.counterTextActive]}>
-                  {counts.total} {lang === 'hi' ? 'लंबित' : 'Pending'}
+                  {counts.total} {lang === 'hi' ? 'बाकी' : 'Pending'}
                 </Text>
               </View>
             </View>
 
+            {/* Section 4: Pending Items List */}
             {counts.total === 0 ? (
               <View style={styles.emptyQueueBox}>
-                <Ionicons name="checkmark-done-circle-outline" size={28} color="#16A34A" />
+                <Ionicons name="checkmark-done-circle-outline" size={32} color="#16A34A" />
                 <Text style={styles.emptyQueueText}>
                   {lang === 'hi'
-                    ? 'स्थानीय कतार एकदम खाली है। सभी डेटा सर्वर के साथ सिंक है।'
-                    : 'Air-gap queue is empty. All local records are synchronized with HQ.'}
+                    ? 'स्थानीय कतार खाली है। सभी डेटा सिंक है।'
+                    : 'Queue is clear. All records are synced with HQ.'}
                 </Text>
               </View>
             ) : (
-              <View style={{ gap: 6 }}>
+              <View style={styles.itemsContainer}>
                 {pendingCheckins.map((c, i) => (
                   <View key={`c-${i}`} style={styles.itemRow}>
-                    <Ionicons name="stopwatch-outline" size={14} color="#D97706" style={{ marginRight: 6 }} />
+                    <View style={styles.itemIconWrap}>
+                      <Ionicons name="stopwatch-outline" size={15} color="#D97706" />
+                    </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.itemTitle}>
                         {lang === 'hi' ? 'दैनिक चेक-इन' : 'Daily Check-in'} (Mood: {c.mood_score}/5)
                       </Text>
-                      <Text style={styles.itemSub}>{c.created_at}</Text>
+                      <Text style={styles.itemSub}>{formatTimestamp(c.created_at)}</Text>
                     </View>
                     <View style={styles.queuedBadge}>
                       <Text style={styles.queuedBadgeText}>QUEUED</Text>
@@ -210,10 +247,16 @@ export const TrenchSyncModal: React.FC<TrenchSyncModalProps> = ({
 
                 {pendingLeaves.map((l, i) => (
                   <View key={`l-${i}`} style={styles.itemRow}>
-                    <Ionicons name="calendar-outline" size={14} color="#D97706" style={{ marginRight: 6 }} />
+                    <View style={styles.itemIconWrap}>
+                      <Ionicons name="calendar-outline" size={15} color="#D97706" />
+                    </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.itemTitle}>{l.leave_type} ({l.days_requested}d)</Text>
-                      <Text style={styles.itemSub}>{l.personal_reason || l.created_at}</Text>
+                      <Text style={styles.itemTitle}>
+                        {l.leave_type} ({l.days_requested}d)
+                      </Text>
+                      <Text style={styles.itemSub}>
+                        {l.personal_reason || formatTimestamp(l.created_at)}
+                      </Text>
                     </View>
                     <View style={styles.queuedBadge}>
                       <Text style={styles.queuedBadgeText}>QUEUED</Text>
@@ -223,26 +266,39 @@ export const TrenchSyncModal: React.FC<TrenchSyncModalProps> = ({
               </View>
             )}
 
-            {/* Section 4: Sync Button */}
-            <MonochromeButton
-              title={
-                syncing
-                  ? (lang === 'hi' ? 'सिंक जारी है...' : 'SYNCHRONIZING...')
-                  : (lang === 'hi' ? `एयर-गैप कतार सिंक करें (${counts.total})` : `SYNC AIR-GAP QUEUE (${counts.total})`)
-              }
-              variant="solid"
-              disabled={syncing || counts.total === 0}
-              onPress={handleSyncNow}
-              icon={<Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />}
-              style={styles.syncBtn}
-            />
+            {/* Section 5: Action Buttons */}
+            <View style={styles.actionsContainer}>
+              <MonochromeButton
+                title={
+                  syncing
+                    ? (lang === 'hi' ? 'सिंक हो रहा है...' : 'SYNCHRONIZING...')
+                    : (lang === 'hi'
+                        ? `कतार सिंक करें (${counts.total})`
+                        : `SYNC AIR-GAP QUEUE (${counts.total})`)
+                }
+                variant="solid"
+                disabled={syncing || counts.total === 0}
+                onPress={handleSyncNow}
+                icon={<Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />}
+                style={styles.syncBtn}
+              />
 
-            {/* Statutory Compliance Footer */}
-            <Text style={styles.statutoryFooter}>
-              {lang === 'hi'
-                ? 'धारा 14 DPDPA एवं रक्षा मंत्रालय निर्देश: स्थानीय SQLite डेटाबेस एन्क्रिप्टेड है और सिंक के समय कोई डेटा लॉस या छेड़छाड़ नहीं हो सकती।'
-                : 'Sec 14 DPDPA & MoD Mandate: Local SQLite storage is air-gap sealed. Payload hash verified at sync.'}
-            </Text>
+              {counts.total > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleClearQueue}
+                  disabled={clearing}
+                  style={styles.clearBtn}
+                >
+                  <Ionicons name="trash-outline" size={14} color="#64748B" style={{ marginRight: 6 }} />
+                  <Text style={styles.clearBtnText}>
+                    {clearing
+                      ? (lang === 'hi' ? 'हटाया जा रहा है...' : 'Clearing...')
+                      : (lang === 'hi' ? 'कतार साफ करें (Clear Queue)' : 'Clear Local Queue')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -262,98 +318,98 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: '85%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 16,
+    padding: 20,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
-    paddingBottom: 10,
-    marginBottom: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: '#FEF3C7',
     borderWidth: 1,
     borderColor: '#FDE68A',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 12,
   },
   modalTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
   },
   modalSubtitle: {
-    fontSize: 9,
+    fontSize: 11,
+    fontWeight: '600',
     color: '#64748B',
-    marginTop: 1,
+    marginTop: 2,
   },
   closeBtn: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
   },
   bodyScroll: {
-    flexGrow: 0,
+    marginTop: 14,
   },
   toggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+    padding: 14,
+    marginBottom: 14,
   },
   statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: 6,
-  },
-  dotGreen: {
-    backgroundColor: '#16A34A',
   },
   dotAmber: {
     backgroundColor: '#D97706',
   },
+  dotGreen: {
+    backgroundColor: '#16A34A',
+  },
   toggleTitle: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '800',
     color: '#0F172A',
   },
   toggleDesc: {
-    fontSize: 9,
+    fontSize: 11,
     color: '#64748B',
-    marginTop: 2,
-    lineHeight: 12,
+    lineHeight: 16,
   },
   resultBanner: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 10,
+    marginBottom: 14,
   },
   resultSuccess: {
     backgroundColor: '#F0FDF4',
@@ -364,12 +420,13 @@ const styles = StyleSheet.create({
     borderColor: '#FDE68A',
   },
   resultTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     color: '#0F172A',
   },
   resultSub: {
-    fontSize: 8,
+    fontSize: 10,
+    fontWeight: '600',
     color: '#64748B',
     marginTop: 2,
   },
@@ -377,28 +434,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   sectionLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     color: '#475569',
-    letterSpacing: 0.4,
+    letterSpacing: 0.6,
   },
   counterPill: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   counterPillActive: {
     backgroundColor: '#FEF3C7',
+    borderWidth: 1,
     borderColor: '#FDE68A',
   },
   counterText: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '800',
     color: '#64748B',
   },
@@ -406,21 +462,25 @@ const styles = StyleSheet.create({
     color: '#92400E',
   },
   emptyQueueBox: {
+    padding: 24,
     backgroundColor: '#F8FAFC',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: 6,
-    padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   emptyQueueText: {
-    fontSize: 10,
-    color: '#64748B',
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16A34A',
+    marginTop: 8,
     textAlign: 'center',
-    marginTop: 6,
+  },
+  itemsContainer: {
+    gap: 8,
+    marginBottom: 16,
   },
   itemRow: {
     flexDirection: 'row',
@@ -428,40 +488,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: 6,
-    padding: 8,
+    borderRadius: 10,
+    padding: 12,
+  },
+  itemIconWrap: {
+    marginRight: 10,
   },
   itemTitle: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
     color: '#0F172A',
   },
   itemSub: {
-    fontSize: 8,
+    fontSize: 10,
     color: '#64748B',
-    marginTop: 1,
+    marginTop: 2,
   },
   queuedBadge: {
     backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: '#FDE68A',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
   },
   queuedBadgeText: {
-    fontSize: 7,
+    fontSize: 9,
     fontWeight: '800',
     color: '#92400E',
+    letterSpacing: 0.4,
+  },
+  actionsContainer: {
+    gap: 10,
+    marginTop: 8,
+    marginBottom: 4,
   },
   syncBtn: {
-    marginTop: 10,
+    height: 46,
+    borderRadius: 10,
   },
-  statutoryFooter: {
-    fontSize: 8,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 10,
-    lineHeight: 11,
+  clearBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  clearBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
   },
 });
