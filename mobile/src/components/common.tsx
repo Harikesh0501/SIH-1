@@ -156,15 +156,7 @@ export const TacticalHeader: React.FC<{
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>RAKSHAK-AAYUSH</Text>
-          <View style={styles.hologramTag}>
-            <Text style={styles.hologramText}>104 BN</Text>
-          </View>
-        </View>
-        <Text style={styles.headerSubtitle} numberOfLines={1}>
-          {user ? `${user.rank} ${user.full_name}` : 'DEFENSE MEDICAL SUITE'}
-        </Text>
+        <Text style={styles.headerTitle}>Rakshak-Aayush</Text>
       </View>
 
       <View style={styles.headerRight}>

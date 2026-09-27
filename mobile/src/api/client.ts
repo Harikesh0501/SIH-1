@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { getSecureToken } from '../services/biometricService';
 
 // Current confirmed LAN IPv4 of host machine
-export const CURRENT_LAN_IP = '10.99.237.203';
+export const CURRENT_LAN_IP = '10.99.113.105';
 
 // Dynamically determine backend host so physical device in Expo Go, Web, and Emulator connect in real time
 export const getBackendBaseUrl = (): string => {
@@ -55,7 +55,7 @@ apiClient.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     const url = error?.config?.url;
-    console.warn(`[API Error] ${status || 'NET_ERR'} on ${url}:`, error?.response?.data || error?.message);
+    console.log(`[API Error] ${status || 'NET_ERR'} on ${url}:`, error?.response?.data || error?.message);
     return Promise.reject(error);
   }
 );
