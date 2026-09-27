@@ -117,12 +117,12 @@ export function PrivacyCertificateCard({ lang = 'en', onPrint }) {
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-500 block">Soldier Name</span>
             <span className="font-extrabold text-slate-900 text-sm">
-              {cert?.soldier_name ? `${cert?.rank ? cert.rank + ' ' : ''}${cert.soldier_name}` : 'Ct. Ramesh Kumar'}
+              {cert?.soldier_name ? `${cert?.rank ? cert.rank + ' ' : ''}${cert.soldier_name}` : 'Soldier'}
             </span>
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-500 block">Service Number</span>
-            <span className="font-mono font-bold text-slate-800">{cert?.service_number || 'CT-84920'}</span>
+            <span className="font-mono font-bold text-slate-800">{cert?.service_number || '-'}</span>
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-500 block">Unit / Company</span>

@@ -30,45 +30,6 @@ export interface User {
   phone?: string;
 }
 
-export const FALLBACK_USERS: Record<string, User> = {
-  'CT-RAMESH-84920': {
-    id: 1,
-    username: 'CT-RAMESH-84920',
-    role: 'Jawan',
-    full_name: 'Ct. Ramesh Kumar',
-    rank: 'Constable',
-    company: 'Alpha Company',
-    service_number: 'CT-84920',
-  },
-  'MED-104-MALHOTRA': {
-    id: 2,
-    username: 'MED-104-MALHOTRA',
-    role: 'Welfare Officer',
-    full_name: 'Dr. Rajiv Malhotra',
-    rank: 'Chief Medical Officer (SG)',
-    company: 'Base Hospital Unit',
-    service_number: 'MED-104-998',
-  },
-  'CO-104-SHARMA': {
-    id: 3,
-    username: 'CO-104-SHARMA',
-    role: 'Commanding Officer',
-    full_name: 'Col. V.K. Sharma',
-    rank: 'Commandant',
-    company: '104 Bn HQ',
-    service_number: 'IC-48291X',
-  },
-  'AUDIT-HQ-OFFICER': {
-    id: 4,
-    username: 'AUDIT-HQ-OFFICER',
-    role: 'Audit Admin',
-    full_name: 'Insp. Gen. R.S. Verma',
-    rank: 'Inspector General (Governance)',
-    company: 'MHA Welfare Directorate',
-    service_number: 'IPS-90214',
-  },
-};
-
 interface RegisterPayload {
   username: string;
   password: string;
@@ -93,13 +54,12 @@ interface AuthContextType {
   biometricSupported: boolean;
   biometricInfo: BiometricCheckResult | null;
   biometricAutoEnabled: boolean;
-  loginWithCredentials: (username: string, password?: string, enableBiometric?: boolean) => Promise<{ success: boolean; message?: string }>;
+  loginWithCredentials: (username: string, password: string, enableBiometric?: boolean) => Promise<{ success: boolean; message?: string }>;
   registerWithCredentials: (req: RegisterPayload) => Promise<{ success: boolean; message?: string }>;
   sendOtp: (email: string, phone?: string, fullName?: string) => Promise<{ success: boolean; message?: string; demo_phone_otp?: string }>;
   verifyOtp: (email: string, otp: string) => Promise<{ success: boolean; message?: string }>;
   loginWithBiometrics: () => Promise<{ success: boolean; message?: string }>;
   setBiometricPreference: (enabled: boolean) => Promise<void>;
-  switchDemoRole: (role: 'Jawan' | 'Welfare Officer' | 'Commanding Officer' | 'Audit Admin') => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -155,60 +115,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithCredentials = async (
     username: string,
-    password: string = 'demo123',
+    password: string,
     enableBiometric: boolean = false
   ): Promise<{ success: boolean; message?: string }> => {
     try {
       setIsLoading(true);
       const cleanUsername = username.trim().toUpperCase();
 
-      try {
-        const res = await apiClient.post('/api/auth/login', { username: cleanUsername, password });
-        const data = res.data;
-        setToken(data.access_token);
-        setUser(data.user);
-        await saveSecureToken(data.access_token);
-        await saveSecureUser(data.user);
+      const res = await apiClient.post('/api/auth/login', { username: cleanUsername, password });
+      const data = res.data;
+      setToken(data.access_token);
+      setUser(data.user);
+      await saveSecureToken(data.access_token);
+      await saveSecureUser(data.user);
 
-        if (enableBiometric) {
-          await saveBiometricPreference(true);
-          await saveLastEnrolledAuth(data.user, data.access_token);
-          setBiometricAutoEnabled(true);
-        }
-        return { success: true };
-      } catch (apiErr: any) {
-        // Fallback for offline mode
-        const matched = FALLBACK_USERS[cleanUsername] || {
-          id: 99,
-          username: cleanUsername,
-          role: cleanUsername.startsWith('CO-')
-            ? 'Commanding Officer'
-            : cleanUsername.startsWith('MED-')
-            ? 'Welfare Officer'
-            : cleanUsername.startsWith('AUDIT-')
-            ? 'Audit Admin'
-            : 'Jawan',
-          full_name: cleanUsername.startsWith('CT-') ? 'Ct. Ramesh Kumar' : cleanUsername,
-          rank: cleanUsername.startsWith('CT-') ? 'Constable' : 'Personnel',
-          company: 'Alpha Company',
-          service_number: cleanUsername,
-        };
-
-        const mockToken = `OFFLINE_JWT_${Date.now()}`;
-        setToken(mockToken);
-        setUser(matched as User);
-        await saveSecureToken(mockToken);
-        await saveSecureUser(matched);
-
-        if (enableBiometric) {
-          await saveBiometricPreference(true);
-          await saveLastEnrolledAuth(matched, mockToken);
-          setBiometricAutoEnabled(true);
-        }
-        return { success: true };
+      if (enableBiometric) {
+        await saveBiometricPreference(true);
+        await saveLastEnrolledAuth(data.user, data.access_token);
+        setBiometricAutoEnabled(true);
       }
+      return { success: true };
     } catch (error: any) {
-      return { success: false, message: error?.message || 'Authentication error' };
+      const errMsg = error?.response?.data?.detail || error?.message || 'Authentication error';
+      return { success: false, message: errMsg };
     } finally {
       setIsLoading(false);
     }
@@ -353,17 +282,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
 
-        // If fresh install, unlock default soldier profile
-        const defaultSoldier = FALLBACK_USERS['CT-RAMESH-84920'];
-        const mockToken = `BIOMETRIC_TOKEN_${Date.now()}`;
-        setToken(mockToken);
-        setUser(defaultSoldier);
-        await saveSecureToken(mockToken);
-        await saveSecureUser(defaultSoldier);
-        await saveBiometricPreference(true);
-        await saveLastEnrolledAuth(defaultSoldier, mockToken);
-        setBiometricAutoEnabled(true);
-        return { success: true };
+        return {
+          success: false,
+          message:
+            lang === 'hi'
+              ? 'बायोमेट्रिक सक्रिय करने के लिए कृपया पहले पासवर्ड से लॉगिन करें'
+              : 'Please log in with password once to enroll biometric access.',
+        };
       }
       return { success: false, message: 'Biometric verification cancelled' };
     } catch (error: any) {
@@ -377,20 +302,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setBiometricPref = async (enabled: boolean) => {
     await saveBiometricPreference(enabled);
     setBiometricAutoEnabled(enabled);
-  };
-
-  const switchDemoRole = async (role: 'Jawan' | 'Welfare Officer' | 'Commanding Officer' | 'Audit Admin') => {
-    const credentialsMap: Record<string, string> = {
-      Jawan: 'CT-RAMESH-84920',
-      'Welfare Officer': 'MED-104-MALHOTRA',
-      'Commanding Officer': 'CO-104-SHARMA',
-      'Audit Admin': 'AUDIT-HQ-OFFICER',
-    };
-
-    const uname = credentialsMap[role];
-    if (uname) {
-      await loginWithCredentials(uname, 'demo123');
-    }
   };
 
   const handleSetLanguage = async (newLang: 'hi' | 'en') => {
@@ -423,7 +334,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyOtp,
         loginWithBiometrics,
         setBiometricPreference: setBiometricPref,
-        switchDemoRole,
         logout,
       }}
     >

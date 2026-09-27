@@ -48,11 +48,11 @@ export const CertificateScreen: React.FC = () => {
     } catch (err: any) {
       console.log('Using offline fallback certificate for frontline trench:', err?.message);
       const now = new Date();
-      const sNum = user?.service_number || user?.username || 'CT-84920';
+      const sNum = user?.service_number || user?.username || 'SERVICE-ID';
       const mId = `JWN-${sNum.slice(-5)}`;
       setCert({
         certificate_id: `APAR-IMMUNITY-${sNum}-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`,
-        soldier_name: user?.full_name || 'Ct. Ramesh Kumar',
+        soldier_name: user?.full_name || user?.username || 'Soldier',
         service_number: sNum,
         masked_id: mId,
         company: user?.company ? `${user.company}, 104 Bn` : 'Alpha Company, 104 Bn',

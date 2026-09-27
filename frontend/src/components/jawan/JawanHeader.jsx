@@ -93,10 +93,10 @@ export function JawanHeader({
 
             <div className="text-right hidden sm:block">
               <div className="text-xs font-bold text-slate-900 leading-tight">
-                {currentUser?.full_name || 'Ct. Ramesh Kumar'}
+                {currentUser?.full_name || currentUser?.username || 'Soldier'}
               </div>
               <div className="text-[10px] text-slate-500 font-mono">
-                {currentUser?.service_number || 'CT-RAMESH-84920'}
+                {currentUser?.service_number || currentUser?.username || ''}
               </div>
             </div>
 

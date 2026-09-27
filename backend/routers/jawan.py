@@ -37,12 +37,19 @@ def get_soldier_personnel_record(current_user: models.User, db: Session) -> mode
             models.Personnel.full_name.ilike(current_user.full_name)
         ).first()
     if not person:
-        person = db.query(models.Personnel).first()
-    if not person:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Personnel record for service number '{current_user.service_number}' not found."
+        # Dynamically create and persist the personnel record strictly for this soldier
+        person = models.Personnel(
+            service_number=current_user.service_number or current_user.username,
+            full_name=current_user.full_name or current_user.username,
+            rank=current_user.rank or "Constable",
+            company=current_user.company or "Alpha Company",
+            predicted_risk_tier="Low",
+            composite_stress_score=15.0,
+            xai_explanation="Initial profile created for authenticated soldier."
         )
+        db.add(person)
+        db.commit()
+        db.refresh(person)
     return person
 
 # -------------------------------------------------------------

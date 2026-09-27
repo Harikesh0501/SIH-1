@@ -54,19 +54,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     except JWTError:
         pass
 
-    # 2. Gracefully accept offline/trench fallback tokens from mobile field enclave
-    if token and (token.startswith("OFFLINE_JWT_") or token.startswith("MOCK_")):
-        return {
-            "user_id": 3,
-            "username": "CT-RAMESH-84920",
-            "role": "Jawan",
-            "full_name": "Ct. Ramesh Kumar",
-            "rank": "Constable",
-            "company": "Alpha Company",
-            "service_number": "CT-84920"
-        }
-
-    # 3. Fallback to unverified claims extraction so deployed sessions never hard-crash
+    # 2. Fallback to unverified claims extraction so deployed sessions never hard-crash
     try:
         unverified_claims = jwt.get_unverified_claims(token)
         if unverified_claims and ("user_id" in unverified_claims or "username" in unverified_claims or "role" in unverified_claims):
@@ -100,16 +88,11 @@ def get_current_user(
         user = db.query(models.User).filter(models.User.username.ilike(username), models.User.is_active == True).first()
     if not user and service_number:
         user = db.query(models.User).filter(models.User.service_number.ilike(service_number), models.User.is_active == True).first()
-    if not user and payload.get("role"):
-        token_role = payload.get("role")
-        user = db.query(models.User).filter(models.User.role.ilike(token_role), models.User.is_active == True).first()
-    if not user:
-        user = db.query(models.User).first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account no longer active or invalid.",
+            detail="User account no longer active or invalid. Please login again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
