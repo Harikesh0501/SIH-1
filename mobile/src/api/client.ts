@@ -3,30 +3,13 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { getSecureToken } from '../services/biometricService';
 
-// Current confirmed LAN IPv4 of host machine
+// Live Production Backend URL hosted on Render (Singapore Cloud)
+export const LIVE_BACKEND_URL = 'https://sih-1-defq.onrender.com';
 export const CURRENT_LAN_IP = '10.99.113.105';
 
-// Dynamically determine backend host so physical device in Expo Go, Web, and Emulator connect in real time
+// Connect to live cloud backend so standalone APK, physical device, and Expo connect anywhere on 4G/5G
 export const getBackendBaseUrl = (): string => {
-  if (Platform.OS === 'web') {
-    return 'http://localhost:8000';
-  }
-
-  const hostUri =
-    Constants.expoConfig?.hostUri ||
-    (Constants as any).manifest2?.extra?.expoClient?.hostUri ||
-    (Constants as any).manifest?.debuggerHost;
-
-  // If hostUri is a real local IP address (e.g. 192.168.x.x or 10.x.x.x or 172.x.x.x)
-  if (hostUri && !hostUri.includes('exp.direct') && !hostUri.includes('localhost') && !hostUri.includes('127.0.0.1')) {
-    const rawIp = hostUri.split(':')[0];
-    if (rawIp && rawIp.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-      return `http://${rawIp}:8000`;
-    }
-  }
-
-  // Fallback to active LAN IP of development machine
-  return `http://${CURRENT_LAN_IP}:8000`;
+  return LIVE_BACKEND_URL;
 };
 
 export const API_BASE_URL = getBackendBaseUrl();
