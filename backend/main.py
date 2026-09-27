@@ -104,8 +104,19 @@ app.add_middleware(
 )
 
 # -------------------------------------------------------------
-# System Health Check
+# System Root & Health Check
 # -------------------------------------------------------------
+@app.get("/", tags=["System"])
+@app.head("/", tags=["System"])
+def root_status():
+    return {
+        "status": "ONLINE",
+        "service": "RAKSHAK-AAYUSH Defense Backend API",
+        "version": "2.0.0",
+        "health": "/api/health",
+        "docs": "/docs"
+    }
+
 @app.get("/api/health", tags=["System"])
 def health_check():
     return {
