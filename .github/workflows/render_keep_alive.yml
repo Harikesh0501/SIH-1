@@ -1,0 +1,24 @@
+name: Render Backend 24/7 Keep-Alive
+
+on:
+  schedule:
+    # Trigger every 10 minutes to prevent Render free-tier spin-down
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send Keep-Alive Ping to Render Health Endpoint
+        run: |
+          BACKEND_URL="${{ secrets.RENDER_BACKEND_URL || 'https://rakshak-aayush-backend.onrender.com' }}"
+          echo "Pinging health endpoint at: $BACKEND_URL/api/health"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/health" || echo "FAILED")
+          echo "Response HTTP Status: $RESPONSE"
+          if [ "$RESPONSE" == "200" ]; then
+            echo "Render Backend is ACTIVE and HEALTHY."
+          else
+            echo "Backend responded with $RESPONSE (waking up or URL not configured yet)."
+          fi

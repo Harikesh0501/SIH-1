@@ -454,3 +454,75 @@ app.include_router(commander_router.router)
 app.include_router(welfare_router.router)
 app.include_router(jawan_router.router)
 app.include_router(audit_router.router)
+
+# -------------------------------------------------------------
+# Cloud Startup Initializer (Render / Serverless)
+# -------------------------------------------------------------
+@app.on_event("startup")
+def startup_event():
+    models.Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        user_count = db.query(models.User).count()
+        if user_count == 0:
+            print("[Startup] Database is empty. Seeding baseline military hierarchy & accounts...")
+            from seed_data import seed_database
+            seed_database()
+        
+        # Ensure Harikesh Patel and Hetayu Patel accounts always exist
+        harikesh = db.query(models.User).filter(
+            (models.User.username == "1203H676") | (models.User.service_number == "1203H676")
+        ).first()
+        if not harikesh:
+            db.add(models.User(
+                username="1203H676",
+                hashed_password=get_password_hash("Harikesh"),
+                role="Jawan",
+                full_name="Harikesh Patel",
+                email="harikeshpatel0105@gmail.com",
+                phone="7874772670",
+                rank="Constable",
+                company="Alpha Company",
+                service_number="1203H676",
+                is_active=True
+            ))
+
+        hetayu = db.query(models.User).filter(
+            (models.User.username == "2026H064") | (models.User.service_number == "2026H064")
+        ).first()
+        if not hetayu:
+            db.add(models.User(
+                username="2026H064",
+                hashed_password=get_password_hash("Harikesh"),
+                role="Welfare Officer",
+                full_name="Hetayu Patel",
+                email="24cs064@charusat.edu.in",
+                phone="7874772678",
+                rank="Chief Medical Officer (SG)",
+                company="Base Hospital Unit",
+                service_number="2026H064",
+                is_active=True
+            ))
+
+        harikesh_person = db.query(models.Personnel).filter(
+            models.Personnel.service_number == "1203H676"
+        ).first()
+        if not harikesh_person:
+            db.add(models.Personnel(
+                service_number="1203H676",
+                full_name="Harikesh Patel",
+                rank="Constable",
+                company="Alpha Company",
+                predicted_risk_tier="Low",
+                composite_stress_score=15.0,
+                xai_explanation="Initial profile created for authenticated soldier."
+            ))
+
+        db.commit()
+        print("[Startup] Cloud database verified with sovereign personnel & user accounts.")
+    except Exception as e:
+        print(f"[Startup Warning] Startup database check: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
