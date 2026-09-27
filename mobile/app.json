@@ -29,7 +29,14 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1bdb8747-0ba4-4329-8d8f-199ccd477be9"
+      }
+    },
+    "owner": "hari0501"
   }
 }
