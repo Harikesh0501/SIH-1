@@ -114,7 +114,7 @@ def get_compliance_metrics(
     )
 
     # 2. k-Anonymity Compliance
-    companies = db.query(models.Personnel.company).distinct().all()
+    companies = db.query(models.Personnel.company).filter(models.Personnel.company.like('%Company%')).distinct().all()
     company_names = [c[0] for c in companies]
     violations = 0
     for comp in company_names:

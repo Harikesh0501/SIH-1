@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL) 
-  ? process.env.NEXT_PUBLIC_API_BASE_URL 
-  : '/api';
+const rawBase = (typeof process !== 'undefined' && (process.env?.NEXT_PUBLIC_API_BASE_URL || process.env?.NEXT_PUBLIC_API_URL || process.env?.BACKEND_URL)) || '';
+let API_BASE_URL = '/api';
+if (rawBase) {
+  const trimmed = rawBase.replace(/\/+$/, '');
+  API_BASE_URL = trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

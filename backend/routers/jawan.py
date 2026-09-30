@@ -38,14 +38,22 @@ def get_soldier_personnel_record(current_user: models.User, db: Session) -> mode
         ).first()
     if not person:
         # Dynamically create and persist the personnel record strictly for this soldier
+        import hashlib
+        svc_num = current_user.service_number or current_user.username
+        masked = f"JWN-{hashlib.md5(svc_num.encode()).hexdigest()[:5].upper()}"
         person = models.Personnel(
-            service_number=current_user.service_number or current_user.username,
+            service_number=svc_num,
+            masked_id=masked,
             full_name=current_user.full_name or current_user.username,
             rank=current_user.rank or "Constable",
             company=current_user.company or "Alpha Company",
-            predicted_risk_tier="Low",
-            composite_stress_score=15.0,
-            xai_explanation="Initial profile created for authenticated soldier."
+            platoon="1st Platoon",
+            role="Combat Patrol",
+            deployment_zone="Peace Station",
+            deployment_type="Peace Station",
+            stress_score=15.0,
+            risk_level="Resilient",
+            risk_drivers_json="[]"
         )
         db.add(person)
         db.commit()
@@ -58,7 +66,7 @@ def get_soldier_personnel_record(current_user: models.User, db: Session) -> mode
 @router.post("/check-in", response_model=schemas.JawanCheckInResponse, status_code=status.HTTP_201_CREATED)
 def submit_daily_checkin(
     req: schemas.JawanCheckInRequest,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role(["Jawan"])),
     db: Session = Depends(get_db)
 ):
     """

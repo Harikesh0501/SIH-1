@@ -94,6 +94,14 @@ class AuditGovernanceMiddleware(BaseHTTPMiddleware):
 # Note: Domain audit logs are recorded natively by respective service endpoints
 # app.add_middleware(AuditGovernanceMiddleware)
 
+# Transparent path normalization: rewrites non-prefixed paths (e.g. /auth/login -> /api/auth/login)
+@app.middleware("http")
+async def normalize_api_path_middleware(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/") and path not in ("/", "/docs", "/redoc", "/openapi.json"):
+        request.scope["path"] = f"/api{path}"
+    return await call_next(request)
+
 # Enable CORS for frontend and development testing
 app.add_middleware(
     CORSMiddleware,
@@ -141,7 +149,8 @@ def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
     clean_username = (req.username or "").strip()
     user = db.query(models.User).filter(
         (models.User.username.ilike(clean_username)) |
-        (models.User.service_number.ilike(clean_username))
+        (models.User.service_number.ilike(clean_username)) |
+        (models.User.email.ilike(clean_username))
     ).first()
 
     pw_valid = False

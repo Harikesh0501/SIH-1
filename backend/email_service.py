@@ -19,7 +19,8 @@ def send_otp_email(to_email: str, recipient_name: str, otp_code: str) -> bool:
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "api-key": api_key,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     display_name = recipient_name.strip() if recipient_name else "Personnel"
