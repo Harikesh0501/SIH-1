@@ -11,7 +11,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: BREVO_SENDER_EMAIL
-        value: cutegirlxxx038@gmail.com
+        value: patelhetayu315@gmail.com
       - key: BREVO_SENDER_NAME
         value: RAKSHAK-AAYUSH Portal
       - key: DATABASE_URL
