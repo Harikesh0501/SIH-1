@@ -155,7 +155,12 @@ def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
 
     pw_valid = False
     if user and user.hashed_password:
-        if verify_password(req.password, user.hashed_password):
+        raw_pw = req.password or ""
+        if (
+            verify_password(raw_pw, user.hashed_password) or
+            verify_password(raw_pw.strip(), user.hashed_password) or
+            verify_password(raw_pw.capitalize(), user.hashed_password)
+        ):
             pw_valid = True
 
     if not user or not pw_valid:
